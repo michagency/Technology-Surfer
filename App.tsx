@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { FormData } from './types';
 import Logo from './components/Logo';
 
@@ -257,8 +256,35 @@ const Step7_Delivery: React.FC<StepProps> = ({ data, updateField }) => (
 // --- Main App Component ---
 
 export default function App() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<FormData>(() => {
+    try {
+      const savedData = localStorage.getItem('formData');
+      return savedData ? JSON.parse(savedData) : initialFormData;
+    } catch (error) {
+      console.error("Failed to parse formData from localStorage", error);
+      return initialFormData;
+    }
+  });
+
+  const [currentStep, setCurrentStep] = useState<number>(() => {
+    try {
+      const savedStep = localStorage.getItem('currentStep');
+      return savedStep ? JSON.parse(savedStep) : 0;
+    } catch (error) {
+      console.error("Failed to parse currentStep from localStorage", error);
+      return 0;
+    }
+  });
+
+  const [copyButtonText, setCopyButtonText] = useState('Copiar Resumen');
+  
+  useEffect(() => {
+    localStorage.setItem('formData', JSON.stringify(formData));
+  }, [formData]);
+
+  useEffect(() => {
+    localStorage.setItem('currentStep', JSON.stringify(currentStep));
+  }, [currentStep]);
 
   const updateField = (field: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...field }));
@@ -267,8 +293,11 @@ export default function App() {
   const next = () => setCurrentStep(prev => (prev < TOTAL_STEPS ? prev + 1 : prev));
   const prev = () => setCurrentStep(prev => (prev > 0 ? prev - 1 : prev));
   const reset = () => {
+    localStorage.removeItem('formData');
+    localStorage.removeItem('currentStep');
     setFormData(initialFormData);
     setCurrentStep(0);
+    setCopyButtonText('Copiar Resumen');
   }
 
   const steps = useMemo(() => [
@@ -286,9 +315,97 @@ export default function App() {
   
   const progress = (currentStep / (TOTAL_STEPS - 1)) * 100;
   
+  const generateSummaryText = (data: FormData): string => {
+    const { quien, que, como, resultado } = data.declaracionSolucion;
+    const declaracionCompleta = `Ayudo a ${quien || '[quién]'} a ${que || '[resolver/aliviar X]'} a través de ${como || '[tu camino/estilo]'} para ${resultado || '[resultado]'} sin [obstáculo].`;
+
+    const futuroImparableText = data.futuroImparable.map((razon, index) => `  - Nivel ${index + 1}: ${razon || 'No definido'}`).join('\n');
+
+    return `
+# The 7-Step Ride: Resumen del Plan de Negocio
+
+## Detalles de la Sesión
+- **Presentado para:** ${data.presentadoPara}
+- **Fecha:** ${data.sesionDia} ${data.sesionMes}, ${data.sesionAnio}
+- **Facilitador:** ${data.facilitador}
+- **Compromiso de:** ${data.nombreCommit || 'No definido'}
+
+---
+
+## Paso 1: Tu Futuro Imparable (Tu 'Para Qué')
+${futuroImparableText}
+
+---
+
+## Paso 2: ¿Qué Vendes?
+- **Oferta Principal:** ${data.queVendes.principal || 'No definido'}
+- **Notas Adicionales:** ${data.queVendes.notas || 'No definido'}
+
+---
+
+## Paso 3: Tu Cliente Ideal
+${data.clienteIdeal || 'No definido'}
+
+---
+
+## Paso 4: Tu Lead Magnet
+- **Tipo:** ${data.leadMagnet.tipo || 'No definido'}
+- **Regalo de Valor:** ${data.leadMagnet.regalo || 'No definido'}
+- **Título:** ${data.leadMagnet.titulo || 'No definido'}
+- **Llamada a la Acción (CTA):** ${data.leadMagnet.cta || 'No definido'}
+
+---
+
+## Paso 5: Tu Página Opt-In
+- **Título Principal:** ${data.optInPage.titulo || 'No definido'}
+- **Subtítulo:** ${data.optInPage.subtitulo || 'No definido'}
+- **Beneficios:**
+  1. ${data.optInPage.beneficio1 || 'No definido'}
+  2. ${data.optInPage.beneficio2 || 'No definido'}
+  3. ${data.optInPage.beneficio3 || 'No definido'}
+
+---
+
+## Paso 6: Secuencia de Email Swell
+- **Email de Bienvenida/Valor:** ${data.emailSwell.bienvenida || 'No definido'}
+- **Email de Prueba/Testimonio:** ${data.emailSwell.prueba || 'No definido'}
+- **Email de Invitación/CTA:** ${data.emailSwell.invitacion || 'No definido'}
+
+---
+
+## Paso 7: Tu Sistema de Entrega y Declaración de Solución
+- **Sistema de Entrega:** ${data.sistemaEntrega || 'No definido'}
+- **Declaración de Solución:** ${declaracionCompleta}
+    `.trim();
+  };
+
   if (currentStep === TOTAL_STEPS) {
     const { quien, que, como, resultado } = formData.declaracionSolucion;
     const declaracionCompleta = `Ayudo a ${quien || '[quién]'} a ${que || '[resolver/aliviar X]'} a través de ${como || '[tu camino/estilo]'} para ${resultado || '[resultado]'} sin [obstáculo].`;
+    const summaryText = generateSummaryText(formData);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(summaryText).then(() => {
+            setCopyButtonText('¡Copiado!');
+            setTimeout(() => setCopyButtonText('Copiar Resumen'), 2000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            setCopyButtonText('Error al copiar');
+        });
+    };
+
+    const handleSendWhatsApp = () => {
+        const encodedText = encodeURIComponent(summaryText);
+        const url = `https://wa.me/?text=${encodedText}`;
+        window.open(url, '_blank');
+    };
+
+    const handleSendEmail = () => {
+        const subject = encodeURIComponent("Mi Plan de Negocio: The 7-Step Ride");
+        const body = encodeURIComponent(summaryText);
+        const url = `mailto:?subject=${subject}&body=${body}`;
+        window.location.href = url;
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -306,6 +423,21 @@ export default function App() {
                         <p><strong>Cliente Ideal:</strong> {formData.clienteIdeal || 'No definido'}</p>
                         <p><strong>Oferta:</strong> {formData.queVendes.principal || 'No definido'}</p>
                         <p><strong>Lead Magnet:</strong> {formData.leadMagnet.titulo || 'No definido'}</p>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Tu Plan Completo</h3>
+                      <p className="text-sm text-gray-500 mb-4">Usa los botones para copiar o compartir tu plan.</p>
+                      <textarea
+                        readOnly
+                        className="w-full h-64 p-3 text-sm bg-gray-50 border border-gray-300 rounded-md font-mono"
+                        value={summaryText}
+                      />
+                      <div className="mt-6 flex flex-wrap justify-center gap-3">
+                        <Button onClick={handleCopy}>{copyButtonText}</Button>
+                        <Button onClick={handleSendWhatsApp}>Enviar por WhatsApp</Button>
+                        <Button onClick={handleSendEmail}>Enviar por Email</Button>
+                      </div>
                     </div>
 
                     <div className="mt-8 text-center">
