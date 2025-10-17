@@ -532,7 +532,7 @@ ${data.clienteIdeal || 'No definido'}
             Anterior
           </Button>
           <Button onClick={next}>
-            {currentStep === TOTAL_STEPS - 1 ? 'Finalizar y Ver Resumen' : 'Siguiente'}
+            {currentStep === TOTAL_STEPS - 1 ? 'Ver Resumen' : 'Siguiente'}
           </Button>
         </div>
       </main>
