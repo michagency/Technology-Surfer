@@ -63,13 +63,13 @@ const Textarea: React.FC<TextareaProps> = ({ label, description, ...props }) => 
 
 const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = (props) => (
   <button
-    className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-400"
     {...props}
+    className={`inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-400 ${props.className || ''}`}
   />
 );
 
 const StepContainer: React.FC<{ title: string; subtitle: string; children: React.ReactNode }> = ({ title, subtitle, children }) => (
-    <div className="bg-white p-8 rounded-lg shadow-lg w-full animate-fade-in">
+    <div className="bg-white p-8 rounded-lg shadow-lg w-full animate-fade-in print-container">
         <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
         <p className="mt-2 text-gray-600">{subtitle}</p>
         <div className="mt-8 space-y-6">
@@ -253,7 +253,7 @@ const Step7_Delivery: React.FC<StepProps> = ({ data, updateField }) => (
 );
 
 const ReviewAndEdit: React.FC<StepProps> = ({ data, updateField }) => (
-    <div className="bg-white p-8 rounded-lg shadow-lg w-full animate-fade-in space-y-12">
+    <div className="bg-white p-8 rounded-lg shadow-lg w-full animate-fade-in space-y-12 print-container">
         <Step0_Intro data={data} updateField={updateField} />
         <hr/>
         <Step_Commitment data={data} updateField={updateField} />
@@ -407,11 +407,18 @@ ${data.clienteIdeal || 'No definido'}
     if (isReviewing) {
         return (
             <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4 sm:p-6 lg:p-8">
-                <main className="max-w-4xl w-full mx-auto">
+                <main className="max-w-4xl w-full mx-auto relative">
+                    <button
+                        onClick={() => window.print()}
+                        className="no-print absolute top-2 right-2 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                        aria-label="Imprimir Plan"
+                    >
+                        Imprimir
+                    </button>
                     <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">Revisa y Edita tu Plan</h1>
                     <p className="text-center text-gray-600 mb-8">Ajusta cualquier campo y guarda los cambios para ver el resumen actualizado.</p>
                     <ReviewAndEdit data={formData} updateField={updateField} />
-                    <div className="mt-8 text-center">
+                    <div className="mt-8 text-center no-print">
                         <Button onClick={() => setIsReviewing(false)}>
                             Guardar Cambios y Ver Resumen
                         </Button>
@@ -483,7 +490,12 @@ ${data.clienteIdeal || 'No definido'}
                     </div>
 
                     <div className="mt-8 text-center">
-                        <Button onClick={reset}>Comenzar de Nuevo</Button>
+                        <Button 
+                            onClick={reset}
+                            className="!bg-gray-800 hover:!bg-black focus:!ring-gray-600"
+                        >
+                          Comenzar de Nuevo
+                        </Button>
                     </div>
                  </StepContainer>
             </main>
