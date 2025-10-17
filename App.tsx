@@ -252,6 +252,28 @@ const Step7_Delivery: React.FC<StepProps> = ({ data, updateField }) => (
     </StepContainer>
 );
 
+const ReviewAndEdit: React.FC<StepProps> = ({ data, updateField }) => (
+    <div className="bg-white p-8 rounded-lg shadow-lg w-full animate-fade-in space-y-12">
+        <Step0_Intro data={data} updateField={updateField} />
+        <hr/>
+        <Step_Commitment data={data} updateField={updateField} />
+        <hr/>
+        <Step1_Future data={data} updateField={updateField} />
+        <hr/>
+        <Step2_Offer data={data} updateField={updateField} />
+        <hr/>
+        <Step3_IdealClient data={data} updateField={updateField} />
+        <hr/>
+        <Step4_LeadMagnet data={data} updateField={updateField} />
+        <hr/>
+        <Step5_OptIn data={data} updateField={updateField} />
+        <hr/>
+        <Step6_EmailSwell data={data} updateField={updateField} />
+        <hr/>
+        <Step7_Delivery data={data} updateField={updateField} />
+    </div>
+);
+
 
 // --- Main App Component ---
 
@@ -276,6 +298,7 @@ export default function App() {
     }
   });
 
+  const [isReviewing, setIsReviewing] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copiar Resumen');
   
   useEffect(() => {
@@ -298,6 +321,7 @@ export default function App() {
     setFormData(initialFormData);
     setCurrentStep(0);
     setCopyButtonText('Copiar Resumen');
+    setIsReviewing(false);
   }
 
   const steps = useMemo(() => [
@@ -380,8 +404,25 @@ ${data.clienteIdeal || 'No definido'}
   };
 
   if (currentStep === TOTAL_STEPS) {
+    if (isReviewing) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4 sm:p-6 lg:p-8">
+                <main className="max-w-4xl w-full mx-auto">
+                    <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">Revisa y Edita tu Plan</h1>
+                    <p className="text-center text-gray-600 mb-8">Ajusta cualquier campo y guarda los cambios para ver el resumen actualizado.</p>
+                    <ReviewAndEdit data={formData} updateField={updateField} />
+                    <div className="mt-8 text-center">
+                        <Button onClick={() => setIsReviewing(false)}>
+                            Guardar Cambios y Ver Resumen
+                        </Button>
+                    </div>
+                </main>
+            </div>
+        )
+    }
+
     const { quien, que, como, resultado } = formData.declaracionSolucion;
-    const declaracionCompleta = `Ayudo a ${quien || '[quién]'} a ${que || '[resolver/aliviar X]'} a través de ${como || '[tu camino/estilo]'} para ${resultado || '[resultado]'} sin [obstáculo].`;
+    const declaracionCompleta = `Ayudo a ${quien || '[quién]'} a ${que || '[resolver/aliviar X]'} a través de ${como || '[tu camino/estilo]'} para ${resultado || '[resultado]'} sin obstáculo.`;
     const summaryText = generateSummaryText(formData);
 
     const handleCopy = () => {
@@ -434,6 +475,7 @@ ${data.clienteIdeal || 'No definido'}
                         value={summaryText}
                       />
                       <div className="mt-6 flex flex-wrap justify-center gap-3">
+                        <Button onClick={() => setIsReviewing(true)}>Revisar y Editar</Button>
                         <Button onClick={handleCopy}>{copyButtonText}</Button>
                         <Button onClick={handleSendWhatsApp}>Enviar por WhatsApp</Button>
                         <Button onClick={handleSendEmail}>Enviar por Email</Button>
